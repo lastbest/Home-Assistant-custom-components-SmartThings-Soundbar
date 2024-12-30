@@ -33,13 +33,13 @@ class SoundbarApi:
         resp = requests.get(API_DEVICE_STATUS, headers=REQUEST_HEADERS)
         data = resp.json()
 
-        device_volume = data['main']['volume']['value']
+        device_volume = SoundbarApi.extractor(data, "main.volume.value")
         device_volume = min(int(device_volume) / entity._max_volume, 1)
-        switch_state = data['main']['switch']['value']
-        playback_state = data['main']['playbackStatus']['value']
-        device_source = data['main']['inputSource']['value']
-        device_all_sources = json.loads(data['main']['supportedInputSources']['value'])
-        device_muted = data['main']['mute']['value'] != "unmuted"
+        switch_state = SoundbarApi.extractor(data, "main.switch.value")
+        playback_state = SoundbarApi.extractor(data, "main.playbackStatus.value")
+        device_source = SoundbarApi.extractor(data, "main.inputSource.value")
+        device_all_sources = json.loads(SoundbarApi.extractor(data, "main.supportedInputSources.value"))
+        device_muted = SoundbarApi.extractor(data, "main.mute.value") != "unmuted"
 
         if switch_state == "on":
             if device_source.lower() in CONTROLLABLE_SOURCES:
@@ -58,7 +58,7 @@ class SoundbarApi:
         entity._muted = device_muted
         entity._source = device_source
         if entity._state in [STATE_PLAYING, STATE_PAUSED] and 'trackDescription' in data['main']:
-            entity._media_title = data['main']['trackDescription']['value']
+            entity._media_title = SoundbarApi.extractor(data, "main.trackDescription.value")
         else:
             entity._media_title = None
 
@@ -120,3 +120,16 @@ class SoundbarApi:
                 }}"""
             cmdurl = requests.post(API_COMMAND, data=API_COMMAND_DATA, headers=REQUEST_HEADERS)
         entity.schedule_update_ha_state()
+
+    @staticmethod
+    def extractor(json, path):
+        def extractor_arr(json_obj, path_array):
+            if path_array[0] not in json_obj:
+                return None
+            if len(path_array) > 1:
+                return extractor_arr(json_obj[path_array[0]], path_array[1:])
+            return json_obj[path_array[0]]
+        try:
+            return extractor_arr(json, path.split("."))
+        except:
+            return None

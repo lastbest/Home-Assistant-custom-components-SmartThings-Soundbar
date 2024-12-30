@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_MAX_VOLUME, default=1): cv.positive_int,
+        vol.Optional(CONF_MAX_VOLUME, default=100): cv.positive_int,
     }
 )
 
