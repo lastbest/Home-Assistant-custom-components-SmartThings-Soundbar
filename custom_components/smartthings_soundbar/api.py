@@ -1,7 +1,7 @@
 import json
 
 import requests
-from homeassistant.const import (STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+from homeassistant.const import (STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
 
 API_BASEURL = "https://api.smartthings.com/v1"
 API_DEVICES = API_BASEURL + "/devices/"
@@ -33,13 +33,16 @@ class SoundbarApi:
         resp = requests.get(API_DEVICE_STATUS, headers=REQUEST_HEADERS)
         data = resp.json()
 
-        device_volume = SoundbarApi.extractor(data, "main.volume.value")
-        device_volume = min(int(device_volume) / entity._max_volume, 1)
         switch_state = SoundbarApi.extractor(data, "main.switch.value")
+        if switch_state is None:
+            entity._state = STATE_UNAVAILABLE
+            return
         playback_state = SoundbarApi.extractor(data, "main.playbackStatus.value")
         device_source = SoundbarApi.extractor(data, "main.inputSource.value")
         device_all_sources = json.loads(SoundbarApi.extractor(data, "main.supportedInputSources.value"))
         device_muted = SoundbarApi.extractor(data, "main.mute.value") != "unmuted"
+        device_volume = SoundbarApi.extractor(data, "main.volume.value")
+        device_volume = min(int(device_volume) / entity._max_volume, 1)
 
         if switch_state == "on":
             if device_source.lower() in CONTROLLABLE_SOURCES:
