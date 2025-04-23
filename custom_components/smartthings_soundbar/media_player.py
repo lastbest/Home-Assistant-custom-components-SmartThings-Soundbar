@@ -1,5 +1,6 @@
 import logging
 import voluptuous as vol
+import asyncio
 
 from .api import SoundbarApi
 
@@ -18,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "SmartThings Soundbar"
 CONF_MAX_VOLUME = "max_volume"
+CONF_WAKE_SCENE = "wake_scene"
+CONF_SWITCH_SOURCE_SCENE = "switch_source_scene"
 
 SUPPORT_SMARTTHINGS_SOUNDBAR = (
         MediaPlayerEntityFeature.PAUSE
@@ -37,6 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_ID): cv.string,
         vol.Optional(CONF_MAX_VOLUME, default=100): cv.positive_int,
+        vol.Optional(CONF_WAKE_SCENE): cv.string,
+        vol.Optional(CONF_SWITCH_SOURCE_SCENE): cv.string,
     }
 )
 
@@ -46,16 +51,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     api_key = config.get(CONF_API_KEY)
     device_id = config.get(CONF_DEVICE_ID)
     max_volume = config.get(CONF_MAX_VOLUME)
-    add_entities([SmartThingsSoundbarMediaPlayer(name, api_key, device_id, max_volume)])
+    wake_scene = config.get(CONF_WAKE_SCENE)
+    switch_source_scene = config.get(CONF_SWITCH_SOURCE_SCENE)
+    add_entities([SmartThingsSoundbarMediaPlayer(name, api_key, device_id, max_volume, wake_scene, switch_source_scene)])
 
 
 class SmartThingsSoundbarMediaPlayer(MediaPlayerEntity):
 
-    def __init__(self, name, api_key, device_id, max_volume):
+    def __init__(self, name, api_key, device_id, max_volume, wake_scene, switch_source_scene):
         self._name = name
         self._device_id = device_id
         self._api_key = api_key
         self._max_volume = max_volume
+        self._wake_scene = wake_scene
+        self._switch_source_scene = switch_source_scene
         self._volume = 1
         self._muted = False
         self._playing = True
@@ -95,8 +104,26 @@ class SmartThingsSoundbarMediaPlayer(MediaPlayerEntity):
         arg = ""
         SoundbarApi.send_command(self, arg, cmdtype)
 
-    def select_source(self, source, cmdtype="selectsource"):
-        SoundbarApi.send_command(self, source, cmdtype)
+    async def async_select_source(self, source, cmdtype="selectsource"):
+        if self._wake_scene is None or self._switch_source_scene is None:
+            SoundbarApi.send_command(self, source, cmdtype)
+        else:
+            current_source = self.source
+            sorted_list = sorted(self._source_list, key=str.lower)
+            repeat_count = (sorted_list.index(source) - sorted_list.index(current_source)) % len(sorted_list)
+
+            await self.hass.services.async_call(
+                "scene", "turn_on",
+                {"entity_id": self._wake_scene},
+                blocking=True
+            )
+            for _ in range(repeat_count):
+                await asyncio.sleep(0.3)
+                await self.hass.services.async_call(
+                    "scene", "turn_on",
+                    {"entity_id": self._switch_source_scene},
+                    blocking=True
+                )
 
     def select_sound_mode(self, sound_mode):
         SoundbarApi.send_command(self, sound_mode, "selectsoundmode")

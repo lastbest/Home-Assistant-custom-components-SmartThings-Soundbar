@@ -11,16 +11,19 @@
 [hacs_shield]: https://img.shields.io/static/v1.svg?label=HACS&message=Custom&style=popout&color=orange&labelColor=41bdf5&logo=HomeAssistantCommunityStore&logoColor=white
 [hacs]: https://hacs.xyz/docs/faq/custom_repositories
 
-[latest_release]: https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar/releases/latest
-[releases_shield]: https://img.shields.io/github/release/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar.svg?style=popout
+[latest_release]: https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar/releases/latest
+[releases_shield]: https://img.shields.io/github/release/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar.svg?style=popout
 
-[releases]: https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar/releases
-[downloads_total_shield]: https://img.shields.io/github/downloads/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar/total
+[releases]: https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar/releases
+[downloads_total_shield]: https://img.shields.io/github/downloads/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar/total
 
 
 # SmartThings Soundbar
 
-Adds support for SmartThings enabled Soundbar
+Added an option to change input source using custom IR blaster scenes due to Samsung's API changes.
+You can also choose not to set these options, in which case the default API will be used as-is.
+
+Original repo by **@PiotrMachowski** – This fork adds additional functionality for personal use.
 
 ## Features
 
@@ -40,9 +43,11 @@ Adds support for SmartThings enabled Soundbar
 | Key | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `name` | `string` | `False` | `SmartThings Soundbar` | Name of soundbar |
-| `api_key` | `string` | `True` | - | SmartThings API key (see: [here](https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar#getting-api-key-and-device-id)) |
-| `device_id` | `string` | `True` | - | SmartThings device id (see: [here](https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar#getting-api-key-and-device-id)) |
+| `api_key` | `string` | `True` | - | SmartThings API key (see: [here](https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar#getting-api-key-and-device-id)) |
+| `device_id` | `string` | `True` | - | SmartThings device id (see: [here](https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar#getting-api-key-and-device-id)) |
 | `max_volume` | `positive integer` | `False` | 100 | Volume level that will be used as a maximum level in Home Assistant |
+| `wake_scene` | `string` | `False` | - | Additional IR blaster scene that wakes your soundbar to ensure it's ready to receive input switch commands. |
+| `switch_source_scene` | `string` | `False` | - | Additional IR blaster scene that switches to the next input source in sequence. |
 
 ## Example usage
 
@@ -53,6 +58,8 @@ media_player:
     api_key: "YOUR API KEY"
     device_id: "YOUR DEVICE ID"
     max_volume: 30
+    wake_scene: "scene.TO_WAKE_SOUNDBAR_UP" #for IR blaster
+    switch_source_scene: "scene.TO_SWITCH_SOURCE" #for IR blaster
 ```
 
 
@@ -69,18 +76,18 @@ Once you're signed in on that page, go to https://api.smartthings.com/v1/devices
 ### Using [HACS](https://hacs.xyz/) (recommended)
 
 This integration can be added to HACS as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories):
-* URL: `https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar`
+* URL: `https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar`
 * Category: `Integration`
 
 After adding a custom repository you can use HACS to install this integration using user interface.
 
 ### Manual
 
-To install this integration manually you have to download [*smartthings_soundbar.zip*](https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar/releases/latest/download/smartthings_soundbar.zip) and extract its contents to `config/custom_components/smartthings_soundbar` directory:
+To install this integration manually you have to download [*smartthings_soundbar.zip*](https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar/releases/latest/download/smartthings_soundbar.zip) and extract its contents to `config/custom_components/smartthings_soundbar` directory:
 ```bash
 mkdir -p custom_components/smartthings_soundbar
 cd custom_components/smartthings_soundbar
-wget https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar/releases/latest/download/smartthings_soundbar.zip
+wget https://github.com/lastbest/Home-Assistant-custom-components-SmartThings-Soundbar/releases/latest/download/smartthings_soundbar.zip
 unzip smartthings_soundbar.zip
 rm smartthings_soundbar.zip
 ```
